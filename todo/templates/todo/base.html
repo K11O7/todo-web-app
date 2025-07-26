@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>{% block title %}Todo App{% endblock %}</title>
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+  <style>
+    html.dark body {
+      background-color: #1e1e1e !important;
+      color: white !important;
+    }
+
+html.dark .toast {
+  background-color: #333 !important;
+  color: #fff !important;
+}
+    html.dark .card,
+    html.dark .todo-item {
+      background-color: #1e1e1e !important;
+      color: white !important;
+      border: 1px solid #666 !important;
+    }
+
+    html.dark .text-muted {
+      color: #ccc !important;
+    }
+
+    body, .card, .btn, .badge, .form-control, .form-label, .todo-item, .text-muted {
+      transition: all 0.3s ease-in-out;
+    }
+  </style>
+
+  <!-- EARLY Script: Apply dark class to <html> before anything renders -->
+  <script>
+    try {
+      if (localStorage.getItem('darkMode') === 'true') {
+        document.documentElement.classList.add('dark');
+      }
+    } catch(e) {}
+  </script>
+
+  {% block head %}{% endblock %}
+</head>
+<body class="{% block bodyclass %}{% endblock %}">
+  <!-- Toast Container -->
+  <div class="toast-container position-fixed top-0 start-50 translate-middle-x p-3" style="z-index: 1055;">
+    {% if messages %}
+      {% for message in messages %}
+        <div class="toast align-items-center text-white bg-{{ message.tags|default:'info' }} border-0 mb-2"
+             role="alert" aria-live="assertive" aria-atomic="true" data-bs-delay="1500">
+          <div class="d-flex">
+            <div class="toast-body">
+              {{ message }}
+            </div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+          </div>
+        </div>
+      {% endfor %}
+    {% endif %}
+  </div>
+  {% block content %} {% endblock %}
+
+  {% block script %}
+  <script>
+    const toggle = document.getElementById('darkModeToggle');
+    const body = document.body;
+    const cards = document.querySelectorAll('.card');
+    const todos = document.querySelectorAll('.todo-item');
+    const buttons = document.querySelectorAll('.btn');
+
+    if (localStorage.getItem('darkMode') === 'true') {
+      enableDarkMode();
+    }
+
+    if (toggle) {
+      toggle.textContent = document.documentElement.classList.contains('dark') ? '☀️' : '🌙';
+      toggle.addEventListener('click', () => {
+        const isDark = document.documentElement.classList.contains('dark');
+        if (isDark) {
+          disableDarkMode();
+          localStorage.setItem('darkMode', 'false');
+        } else {
+          enableDarkMode();
+          localStorage.setItem('darkMode', 'true');
+        }
+      });
+    }
+
+    function enableDarkMode() {
+      document.documentElement.classList.add('dark');
+      body.classList.add('bg-dark', 'text-white');
+      if (toggle) toggle.textContent = '☀️';
+
+      cards.forEach(card => card.classList.add('bg-dark', 'text-white'));
+      todos?.forEach(todo => todo.classList.add('bg-dark', 'text-white'));
+      buttons.forEach(btn => {
+        if (btn.classList.contains('btn-outline-secondary')) {
+          btn.classList.replace('btn-outline-secondary', 'btn-outline-light');
+        }
+      });
+    }
+
+    function disableDarkMode() {
+      document.documentElement.classList.remove('dark');
+      body.classList.remove('bg-dark', 'text-white');
+      if (toggle) toggle.textContent = '🌙';
+
+      cards.forEach(card => card.classList.remove('bg-dark', 'text-white'));
+      todos?.forEach(todo => todo.classList.remove('bg-dark', 'text-white'));
+      buttons.forEach(btn => {
+        if (btn.classList.contains('btn-outline-light')) {
+          btn.classList.replace('btn-outline-light', 'btn-outline-secondary');
+        }
+      });
+    }
+     document.addEventListener('DOMContentLoaded', () => {
+      const toastList = document.querySelectorAll('.toast');
+      toastList.forEach(toastEl => {
+        const toast = new bootstrap.Toast(toastEl);
+        toast.show();
+      });
+    });
+  </script>
+  {% endblock %}
+</body>
+</html>

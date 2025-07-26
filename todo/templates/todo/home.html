@@ -1,0 +1,93 @@
+{% extends 'todo/base.html' %}
+{% load form_tags %}
+
+{% block title %}Todo List{% endblock %}
+
+{% block content %}
+<div class="container py-5 pb-5">
+  <div class="d-flex flex-sm-row justify-content-between align-items-start align-items-sm-center gap-2 mb-4">
+    <h1>📋 Todo List</h1>
+    <div class="d-flex align-items-center">
+      <span class="me-2">Hi, <strong>{{ request.user.username }}</strong></span>
+      <button class="btn btn-outline-secondary btn-sm me-2" id="darkModeToggle">🌙</button>
+      <a href="{% url 'logout' %}" class="btn btn-sm btn-danger">Logout</a>
+    </div>
+  </div>
+
+  <div class="card mb-4 shadow-sm">
+    <div class="card-body">
+      <form method="POST" class="row g-2">
+        {% csrf_token %}
+        <div class="col-md-8">
+          {{ form.title.label_tag }}
+          {{ form.title }}
+        </div>
+        <div class="col-md-2">
+          {{ form.due_date.label_tag }}
+          {{ form.due_date }}
+        </div>
+        <div class="col-md-2">
+          {{ form.priority.label_tag }}
+          {{ form.priority }}
+        </div>
+        <div class="col-12">
+          <button type="submit" class="btn btn-primary w-100">✚ Add Task</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
+    <a href="?filter=all" class="btn btn-outline-primary btn-sm {% if filter == 'all' %}active{% endif %}">📋 All</a>
+    <a href="?filter=completed" class="btn btn-outline-success btn-sm {% if filter == 'completed' %}active{% endif %}">✅ Completed</a>
+    <a href="?filter=pending" class="btn btn-outline-warning btn-sm {% if filter == 'pending' %}active{% endif %}">🕓 Pending</a>
+    <span class="text-muted ms-3 mt-0.5">Showing {{ todos|length }} task{{ todos|length|pluralize }} ({{ filter|capfirst }})</span>
+  </div>
+
+  <ul class="list-group shadow-sm">
+    {% for todo in todos %}
+      <li class="list-group-item d-flex justify-content-between align-items-center todo-item">
+        <span>
+          {% if todo.priority == 'H' %}
+            <span class="badge bg-danger me-1">High</span>
+          {% elif todo.priority == 'M' %}
+            <span class="badge bg-warning text-dark me-1">Medium</span>
+          {% elif todo.priority == 'L' %}
+            <span class="badge bg-success me-1">Low</span>
+          {% endif %}
+          {{ todo.title }}
+          {% if todo.due_date %}
+            <small class="text-muted">| Due: {{ todo.due_date }}</small>
+            {% now "Y-m-d" as today_date %}
+            {% if todo.due_date|stringformat:"s" < today_date %}
+              <span class="badge bg-danger">Overdue</span>
+            {% elif todo.due_date|stringformat:"s" == today_date %}
+              <span class="badge bg-info text-dark">Today</span>
+            {% else %}
+              <span class="badge bg-success">Upcoming</span>
+            {% endif %}
+          {% else %}
+          <span class="badge bg-secondary">No Due Date</span>
+          {% endif %}
+          {% if todo.completed %}
+            <span class="badge bg-success">Done</span>
+          {% else %}
+            <span class="badge bg-warning text-dark">Pending</span>
+          {% endif %}
+        </span>
+        <span class="d-flex flex-wrap gap-2 justify-content-end mt-2 mt-md-0">
+          <a href="{% url 'toggle' todo.id %}" class="btn btn-sm btn-outline-success">{% if todo.completed %}↩️{% else %}✅{% endif %}</a>
+          <a href="{% url 'edit' todo.id %}" class="btn btn-sm btn-outline-primary ms-0.5">✏️</a>
+          <a href="{% url 'delete' todo.id %}" class="btn btn-sm btn-outline-danger ms-0.5" onclick="return confirm('Are you sure you want to delete this task?');">🗑️</a>
+        </span>
+      </li>
+    {% empty %}
+      <li class="list-group-item">No todos found.</li>
+    {% endfor %}
+  </ul>
+</div>
+{% endblock %}
+
+{% block script %}
+{{ block.super }}
+{% endblock %}
