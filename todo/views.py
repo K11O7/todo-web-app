@@ -11,6 +11,7 @@ from django.contrib.auth.decorators import login_required
 from django.contrib.auth.forms import UserCreationForm, AuthenticationForm
 from django.contrib.auth import login, logout
 from django.db import models
+from django.db import connection
 
 
 # Create your views here.
@@ -46,7 +47,7 @@ def logout_view(request):
 def home(request):
     filter_option = request.GET.get('filter', 'all')
     todos = Todo.objects.filter(user=request.user)
-
+    print("Current DB backend:", connection.settings_dict['ENGINE'])
     if filter_option == 'completed':
         todos = todos.filter(completed=True)
     elif filter_option == 'pending':
