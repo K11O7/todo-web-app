@@ -1,0 +1,26 @@
+services:
+  - type: web
+    name: todo-web-app
+    env: python
+    buildCommand: "pip install -r requirements.txt"
+    startCommand: >
+      bash -c "
+        python manage.py migrate &&
+        gunicorn todoproject.wsgi
+      "
+    envVars:
+      - key: DJANGO_SECRET_KEY
+        generateValue: true
+      - key: DEBUG
+        value: "False"
+      - key: ALLOWED_HOSTS
+        value: "todo-web-app-ai7j.onrender.com"
+      - fromDatabase:
+          name: todo-db
+          property: connectionString
+          key: DATABASE_URL
+
+databases:
+  - name: todo-db
+    databaseName: todo_db_db20
+    user: todo_db_db20_user
