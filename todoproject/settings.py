@@ -75,7 +75,7 @@ WSGI_APPLICATION = 'todoproject.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default='postgresql://postgres.pcnuxvhdsxalmtqglumo:RD%2AT%23WQawPp3.%2A8@aws-0-ap-south-1.pooler.supabase.com:5432/postgres',  # fallback for local
+        default=os.environ.get('DATABASE_URL'),  # fallback for local
         conn_max_age=600
     )
 }
