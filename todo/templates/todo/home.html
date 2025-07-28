@@ -56,7 +56,7 @@
 
   <ul class="list-group shadow-sm">
     {% for todo in todos %}
-  <li class="list-group-item d-flex justify-content-between align-items-center todo-item">
+  <li id="todo-{{ todo.id }}" class="list-group-item d-flex justify-content-between align-items-center todo-item">
     <span>
       {% if todo.priority == 'H' or todo.priority == 'High' %}
         <span class="badge bg-danger me-1">High</span>
@@ -74,28 +74,28 @@
           {% now "Y-m-d" as today_date %}
           {% with due_date=todo.due_date|stringformat:"s" %}
             {% if due_date < today_date %}
-              <span class="badge bg-danger">Overdue</span>
+              <span class="badge bg-danger due-badge">Overdue</span>
             {% elif due_date == today_date %}
-              <span class="badge bg-info text-dark">Today</span>
+              <span class="badge bg-info text-dark due-badge">Today</span>
             {% else %}
-              <span class="badge bg-success">Upcoming</span>
+              <span class="badge bg-success due-badge">Upcoming</span>
             {% endif %}
           {% endwith %}
         {% endif %}
       {% else %}
-        <span class="badge bg-secondary">No Due Date</span>
+        <span class="badge bg-secondary due-badge">No Due Date</span>
       {% endif %}
 
       {% if todo.completed %}
-        <span class="badge bg-success">Done</span>
+        <span class="badge bg-success status-badge">Done</span>
       {% else %}
-        <span class="badge bg-warning text-dark">Pending</span>
+        <span class="badge bg-warning status-badge text-dark">Pending</span>
       {% endif %}
     </span>
 
     {% if request.user.is_authenticated %}
     <span class="d-flex flex-wrap gap-2 justify-content-end mt-2 mt-md-0">
-      <a href="{% url 'toggle' todo.id %}" class="btn btn-sm btn-outline-success">
+      <a class="btn btn-sm btn-outline-success toggle-btn" data-id="{{ todo.id }}" aria-label="Toggle completion">
         {% if todo.completed %}↩️{% else %}✅{% endif %}
       </a>
       <a href="{% url 'edit' todo.id %}" class="btn btn-sm btn-outline-primary ms-0.5">✏️</a>
@@ -112,5 +112,58 @@
 {% endblock %}
 
 {% block script %}
+<script>
+function getCookie(name) {
+  let cookieValue = null;
+  if (document.cookie && document.cookie !== '') {
+    const cookies = document.cookie.split(';');
+    for (let cookie of cookies) {
+      cookie = cookie.trim();
+      if (cookie.startsWith(name + '=')) {
+        cookieValue = decodeURIComponent(cookie.slice(name.length + 1));
+        break;
+      }
+    }
+  }
+  return cookieValue;
+}
+
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.toggle-btn').forEach(btn => {
+    btn.addEventListener('click', function () {
+      const todoId = this.dataset.id;
+      fetch(`/toggle/${todoId}/`, {
+        method: 'POST',
+        headers: {
+          'X-CSRFToken': getCookie('csrftoken'),
+          'Content-Type': 'application/json'
+        },
+      })
+      .then(res => res.json())
+      .then(data => {
+        const todoItem = document.querySelector(`#todo-${data.id}`);
+        const status = todoItem.querySelector('.status-badge');
+        const dueBadge = todoItem.querySelector('.due-badge');
+
+        if (data.completed) {
+          status.textContent = 'Done';
+          status.className = 'badge bg-success status-badge';
+          if (dueBadge) {
+            dueBadge.style.display = 'none';
+          }
+        } else {
+          status.textContent = 'Pending';
+          status.className = 'badge bg-warning text-dark status-badge';
+            if (dueBadge) {
+              dueBadge.style.display = 'inline-block';
+            }
+        }
+          const toggleBtn = todoItem.querySelector('.toggle-btn');
+          toggleBtn.textContent = data.completed ? '↩️' : '✅';
+      });
+    });
+  });
+});
+</script>
 {{ block.super }}
 {% endblock %}

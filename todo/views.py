@@ -2,8 +2,10 @@ from django.contrib import messages
 from datetime import date
 from django.db.models import Value
 from django.db.models.functions import Coalesce
+from django.http import JsonResponse
 from django.shortcuts import render, redirect
 from django.views.decorators.cache import never_cache
+from django.views.decorators.http import require_POST
 from .models import Todo
 from .forms import TodoForm
 from django.shortcuts import get_object_or_404
@@ -105,11 +107,13 @@ def home(request):
         'is_guest': not request.user.is_authenticated,
     })
 
+@require_POST
+@login_required
 def toggle_complete(request, todo_id):
     todo = get_object_or_404(Todo, id=todo_id)
     todo.completed = not todo.completed
     todo.save()
-    return redirect('home')
+    return JsonResponse({'id': todo_id, 'completed': todo.completed})
 
 def delete_todo(request, todo_id):
     todo = get_object_or_404(Todo, id=todo_id)
