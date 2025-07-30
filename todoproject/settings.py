@@ -75,7 +75,7 @@ WSGI_APPLICATION = 'todoproject.wsgi.application'
 
 DATABASES = {
     'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),  # fallback for local
+        default=os.environ.get('DATABASE_URL'),
         conn_max_age=600
     )
 }

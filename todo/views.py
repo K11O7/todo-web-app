@@ -4,6 +4,7 @@ from django.db.models import Value
 from django.db.models.functions import Coalesce
 from django.http import JsonResponse
 from django.shortcuts import render, redirect
+from django.template.loader import render_to_string
 from django.views.decorators.cache import never_cache
 from django.views.decorators.http import require_POST
 from .models import Todo
@@ -75,6 +76,10 @@ def home(request):
                 new_todo = form.save(commit=False)
                 new_todo.user = request.user
                 new_todo.save()
+                if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+                    html = render_to_string('todo/partials/todo_item.html', {'todo': new_todo, 'request': request})
+                    return JsonResponse({'success': True, 'html': html})
+
                 messages.success(request, '✅ Task added successfully')
                 return redirect('home')
         else:

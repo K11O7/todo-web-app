@@ -1,0 +1,47 @@
+<li id="todo-{{ todo.id }}" class="list-group-item d-flex justify-content-between align-items-center todo-item">
+    <span>
+      {% if todo.priority == 'H' or todo.priority == 'High' %}
+        <span class="badge bg-danger me-1">High</span>
+      {% elif todo.priority == 'M' or todo.priority == 'Medium' %}
+        <span class="badge bg-warning text-dark me-1">Medium</span>
+      {% elif todo.priority == 'L' or todo.priority == 'Low' %}
+        <span class="badge bg-success me-1">Low</span>
+      {% endif %}
+
+      {{ todo.title }}
+
+      {% if todo.due_date %}
+        <small class="text-muted">| Due: {{ todo.due_date }}</small>
+        {% if not todo.completed %}
+          {% now "Y-m-d" as today_date %}
+          {% with due_date=todo.due_date|stringformat:"s" %}
+            {% if due_date < today_date %}
+              <span class="badge bg-danger due-badge">Overdue</span>
+            {% elif due_date == today_date %}
+              <span class="badge bg-info text-dark due-badge">Today</span>
+            {% else %}
+              <span class="badge bg-success due-badge">Upcoming</span>
+            {% endif %}
+          {% endwith %}
+        {% endif %}
+      {% else %}
+        <span class="badge bg-secondary due-badge">No Due Date</span>
+      {% endif %}
+
+      {% if todo.completed %}
+        <span class="badge bg-success status-badge">Done</span>
+      {% else %}
+        <span class="badge bg-warning status-badge text-dark">Pending</span>
+      {% endif %}
+    </span>
+
+    {% if request.user.is_authenticated %}
+    <span class="d-flex flex-wrap gap-2 justify-content-end mt-2 mt-md-0">
+      <a class="btn btn-sm btn-outline-success toggle-btn" data-id="{{ todo.id }}" aria-label="Toggle completion">
+        {% if todo.completed %}↩️{% else %}✅{% endif %}
+      </a>
+      <a href="{% url 'edit' todo.id %}" class="btn btn-sm btn-outline-primary ms-0.5">✏️</a>
+      <a href="{% url 'delete' todo.id %}" class="btn btn-sm btn-outline-danger ms-0.5" onclick="return confirm('Are you sure you want to delete this task?');">🗑️</a>
+    </span>
+    {% endif %}
+  </li>
