@@ -76,8 +76,20 @@ def home(request):
                 new_todo = form.save(commit=False)
                 new_todo.user = request.user
                 new_todo.save()
+
                 if request.headers.get('x-requested-with') == 'XMLHttpRequest':
-                    html = render_to_string('todo/partials/todo_item.html', {'todo': new_todo, 'request': request})
+                    todos = Todo.objects.filter(user=request.user)
+
+                    if filter_option == 'completed':
+                        todos = todos.filter(completed=True)
+                    elif filter_option == 'pending':
+                        todos = todos.filter(completed=False)
+
+                    todos = todos.annotate(
+                        safe_due_date=Coalesce('due_date', Value(date(9999, 12, 31)))
+                    ).order_by('completed', priority_order, 'safe_due_date', 'title')
+
+                    html = render_to_string('todo/partials/todo_list.html', {'todos': todos, 'request': request})
                     return JsonResponse({'success': True, 'html': html, 'message': '✅ Task added successfully'})
         else:
             form = TodoForm()
@@ -117,8 +129,14 @@ def toggle_complete(request, todo_id):
     todo.save()
     return JsonResponse({'id': todo_id, 'completed': todo.completed})
 
+@require_POST
+@login_required
 def delete_todo(request, todo_id):
-    todo = get_object_or_404(Todo, id=todo_id)
+    todo = get_object_or_404(Todo, id=todo_id, user=request.user)
+
+    if request.headers.get('x-requested-with') == 'XMLHttpRequest':
+        todo.delete()
+        return JsonResponse({'success': True, 'id': todo_id, 'message': '🗑️ Task deleted successfully'})
     todo.delete()
     messages.warning(request, '🗑️ Task deleted successfully')
     return redirect('home')

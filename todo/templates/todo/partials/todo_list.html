@@ -1,0 +1,5 @@
+{% for todo in todos %}
+  {% include 'todo/partials/todo_item.html' %}
+{% empty %}
+  <li class="list-group-item">No todos found.</li>
+{% endfor %}

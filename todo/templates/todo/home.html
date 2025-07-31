@@ -83,47 +83,50 @@ function getCookie(name) {
 }
 
 document.addEventListener('DOMContentLoaded', () => {
-  document.querySelectorAll('.toggle-btn').forEach(btn => {
-    btn.addEventListener('click', function () {
-      const todoId = this.dataset.id;
-      fetch(`/toggle/${todoId}/`, {
-        method: 'POST',
-        headers: {
-          'X-CSRFToken': getCookie('csrftoken'),
-          'Content-Type': 'application/json'
-        },
-      })
-      .then(res => res.json())
-      .then(data => {
-        const todoItem = document.querySelector(`#todo-${data.id}`);
-        const status = todoItem.querySelector('.status-badge');
-        const dueBadge = todoItem.querySelector('.due-badge');
+  document.getElementById('todo-list').addEventListener('click', function (e) {
+    const btn = e.target.closest('.toggle-btn');
+    if (!btn) return;
 
-        if (data.completed) {
-          status.textContent = 'Done';
-          status.className = 'badge bg-success status-badge';
-          if (dueBadge) {
-            dueBadge.style.display = 'none';
-          }
-        } else {
-          status.textContent = 'Pending';
-          status.className = 'badge bg-warning text-dark status-badge';
-            if (dueBadge) {
-              dueBadge.style.display = 'inline-block';
-            }
+    const todoId = btn.dataset.id;
+    fetch(`/toggle/${todoId}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken'),
+        'Content-Type': 'application/json'
+      },
+    })
+    .then(res => res.json())
+    .then(data => {
+      const todoItem = document.querySelector(`#todo-${data.id}`);
+      const status = todoItem.querySelector('.status-badge');
+      const dueBadge = todoItem.querySelector('.due-badge');
+
+      if (data.completed) {
+        status.textContent = 'Done';
+        status.className = 'badge bg-success status-badge';
+        if (dueBadge) {
+          dueBadge.style.display = 'none';
         }
-          const toggleBtn = todoItem.querySelector('.toggle-btn');
-          toggleBtn.textContent = data.completed ? '↩️' : '✅';
-      });
+      } else {
+        status.textContent = 'Pending';
+        status.className = 'badge bg-warning text-dark status-badge';
+        if (dueBadge) {
+          dueBadge.style.display = 'inline-block';
+        }
+      }
+
+      const toggleBtn = todoItem.querySelector('.toggle-btn');
+      toggleBtn.textContent = data.completed ? '↩️' : '✅';
     });
   });
 });
+
 
 document.addEventListener('DOMContentLoaded', () => {
   const form = document.querySelector('form');
   const todoList = document.getElementById('todo-list');
 
-  form.addEventListener('submit', function(e) {
+  form.addEventListener('submit', function (e) {
     e.preventDefault();
 
     const formData = new FormData(this);
@@ -138,38 +141,82 @@ document.addEventListener('DOMContentLoaded', () => {
     .then(res => res.json())
     .then(data => {
       if (data.success) {
-        todoList.insertAdjacentHTML('afterbegin', data.html);
+        todoList.innerHTML = data.html;
         form.reset();
+
         if (data.message) {
-  const toastContainer = document.querySelector('.toast-container');
+          const toastContainer = document.querySelector('.toast-container');
 
-  const toast = document.createElement('div');
-  toast.className = 'toast align-items-center text-white bg-success border-0 mb-2';
-  toast.setAttribute('role', 'alert');
-  toast.setAttribute('aria-live', 'assertive');
-  toast.setAttribute('aria-atomic', 'true');
-  toast.setAttribute('data-bs-delay', '1500');
+          const toast = document.createElement('div');
+          toast.className = 'toast align-items-center text-white bg-success border-0 mb-2';
+          toast.setAttribute('role', 'alert');
+          toast.setAttribute('aria-live', 'assertive');
+          toast.setAttribute('aria-atomic', 'true');
+          toast.setAttribute('data-bs-delay', '1500');
 
-  toast.innerHTML = `
-    <div class="d-flex">
-      <div class="toast-body">
-        ${data.message}
-      </div>
-      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-    </div>
-  `;
+          toast.innerHTML = `
+            <div class="d-flex">
+              <div class="toast-body">
+                ${data.message}
+              </div>
+              <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+            </div>
+          `;
 
-  toastContainer.appendChild(toast);
-  const bsToast = new bootstrap.Toast(toast);
-  bsToast.show();
+          toastContainer.appendChild(toast);
+          const bsToast = new bootstrap.Toast(toast);
+          bsToast.show();
 
-  // Optional cleanup after toast disappears
-  toast.addEventListener('hidden.bs.toast', () => toast.remove());
-}
+          toast.addEventListener('hidden.bs.toast', () => toast.remove());
+        }
       }
     });
   });
+    document.getElementById('todo-list').addEventListener('click', function (e) {
+    const btn = e.target.closest('.delete-btn');
+    if (!btn) return;
+
+    const todoId = btn.dataset.id;
+    if (!confirm("Are you sure you want to delete this task?")) return;
+
+    fetch(`/delete/${todoId}/`, {
+      method: 'POST',
+      headers: {
+        'X-CSRFToken': getCookie('csrftoken'),
+        'X-Requested-With': 'XMLHttpRequest',
+        'Content-Type': 'application/json',
+      },
+    })
+    .then(res => res.json())
+    .then(data => {
+      if (data.success) {
+        const todoItem = document.querySelector(`#todo-${data.id}`);
+        if (todoItem) todoItem.remove();
+
+        // Show toast
+        const toastContainer = document.querySelector('.toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'toast align-items-center text-white bg-warning border-0 mb-2';
+        toast.setAttribute('role', 'alert');
+        toast.setAttribute('aria-live', 'assertive');
+        toast.setAttribute('aria-atomic', 'true');
+        toast.setAttribute('data-bs-delay', '1500');
+        toast.innerHTML = `
+          <div class="d-flex">
+            <div class="toast-body">${data.message}</div>
+            <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+          </div>
+        `;
+        toastContainer.appendChild(toast);
+        const bsToast = new bootstrap.Toast(toast);
+        bsToast.show();
+        toast.addEventListener('hidden.bs.toast', () => toast.remove());
+      }
+    });
+  });
+
 });
+
 </script>
 {{ block.super }}
 {% endblock %}
