@@ -140,6 +140,32 @@ document.addEventListener('DOMContentLoaded', () => {
       if (data.success) {
         todoList.insertAdjacentHTML('afterbegin', data.html);
         form.reset();
+        if (data.message) {
+  const toastContainer = document.querySelector('.toast-container');
+
+  const toast = document.createElement('div');
+  toast.className = 'toast align-items-center text-white bg-success border-0 mb-2';
+  toast.setAttribute('role', 'alert');
+  toast.setAttribute('aria-live', 'assertive');
+  toast.setAttribute('aria-atomic', 'true');
+  toast.setAttribute('data-bs-delay', '1500');
+
+  toast.innerHTML = `
+    <div class="d-flex">
+      <div class="toast-body">
+        ${data.message}
+      </div>
+      <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+    </div>
+  `;
+
+  toastContainer.appendChild(toast);
+  const bsToast = new bootstrap.Toast(toast);
+  bsToast.show();
+
+  // Optional cleanup after toast disappears
+  toast.addEventListener('hidden.bs.toast', () => toast.remove());
+}
       }
     });
   });

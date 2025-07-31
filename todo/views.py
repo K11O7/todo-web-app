@@ -78,10 +78,7 @@ def home(request):
                 new_todo.save()
                 if request.headers.get('x-requested-with') == 'XMLHttpRequest':
                     html = render_to_string('todo/partials/todo_item.html', {'todo': new_todo, 'request': request})
-                    return JsonResponse({'success': True, 'html': html})
-
-                messages.success(request, '✅ Task added successfully')
-                return redirect('home')
+                    return JsonResponse({'success': True, 'html': html, 'message': '✅ Task added successfully'})
         else:
             form = TodoForm()
 
