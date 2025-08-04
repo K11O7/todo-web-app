@@ -69,7 +69,12 @@ def home(request):
         todos = todos.annotate(
             safe_due_date=Coalesce('due_date', Value(date(9999, 12, 31)))
         ).order_by('completed', priority_order, 'safe_due_date', 'title')
-
+        if request.headers.get('x-requested-with') == 'XMLHttpRequest' and request.method == 'GET':
+            html = render_to_string('todo/partials/todo_list.html', {
+                'todos': todos,
+                'request': request,
+            })
+            return JsonResponse({'success': True, 'html': html})
         if request.method == 'POST':
             form = TodoForm(request.POST)
             if form.is_valid():

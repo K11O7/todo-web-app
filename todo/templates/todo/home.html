@@ -48,9 +48,9 @@
   </div>
 
   <div class="mb-3 d-flex flex-wrap gap-2 align-items-center">
-    <a href="?filter=all" class="btn btn-outline-primary btn-sm {% if filter == 'all' %}active{% endif %}">📋 All</a>
-    <a href="?filter=completed" class="btn btn-outline-success btn-sm {% if filter == 'completed' %}active{% endif %}">✅ Completed</a>
-    <a href="?filter=pending" class="btn btn-outline-warning btn-sm {% if filter == 'pending' %}active{% endif %}">🕓 Pending</a>
+    <a href="?filter=all" class="btn btn-outline-primary btn-sm btn-filter {% if filter == 'all' %}active{% endif %}">📋 All</a>
+    <a href="?filter=completed" class="btn btn-outline-success btn-sm btn-filter {% if filter == 'completed' %}active{% endif %}">✅ Completed</a>
+    <a href="?filter=pending" class="btn btn-outline-warning btn-sm btn-filter {% if filter == 'pending' %}active{% endif %}">🕓 Pending</a>
     <span class="text-muted ms-3 mt-0.5">Showing {{ todos|length }} task{{ todos|length|pluralize }} ({{ filter|capfirst }})</span>
   </div>
 
@@ -170,6 +170,28 @@ document.addEventListener('DOMContentLoaded', () => {
           toast.addEventListener('hidden.bs.toast', () => toast.remove());
         }
       }
+    });
+  });
+    document.querySelectorAll('.btn-filter').forEach(btn => {
+    btn.addEventListener('click', function (e) {
+      e.preventDefault();
+
+      const url = this.getAttribute('href');
+      fetch(url, {
+        headers: {
+          'X-Requested-With': 'XMLHttpRequest'
+        }
+      })
+      .then(res => res.json())
+      .then(data => {
+        if (data.success) {
+          document.getElementById('todo-list').innerHTML = data.html;
+
+          // Update active filter class
+          document.querySelectorAll('.btn-filter').forEach(b => b.classList.remove('active'));
+          this.classList.add('active');
+        }
+      });
     });
   });
     document.getElementById('todo-list').addEventListener('click', function (e) {
